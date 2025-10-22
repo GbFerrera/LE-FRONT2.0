@@ -1,6 +1,7 @@
 "use client";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Image from "next/image";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import {
   IconHome,
@@ -126,7 +127,13 @@ const Logo = () => {
       href="/"
       className="font-bold text-xl text-orange-500 flex items-center space-x-2 py-1"
     >
-      <div className="h-7 w-7 bg-orange-500 rounded-md shrink-0" />
+      <Image
+        src="/assets/logole-primaria-bg.png"
+        alt="LinkEats Logo"
+        width={50}
+        height={50}
+        className="shrink-0 rounded-lg"
+      />
       <span className="whitespace-pre">LinkEats</span>
     </a>
   );
@@ -138,7 +145,13 @@ const LogoIcon = () => {
       href="/"
       className="font-bold text-xl text-orange-500 flex items-center space-x-2 py-1"
     >
-      <div className="h-7 w-7 bg-orange-500 rounded-md shrink-0" />
+      <Image
+        src="/assets/logole-primaria-bg.png"
+        alt="LinkEats Logo"
+        width={50}
+        height={50}
+        className="shrink-0 rounded-lg"
+      />
     </a>
   );
 };
