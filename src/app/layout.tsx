@@ -1,7 +1,6 @@
 "use client";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Image from "next/image";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import {
   IconHome,
@@ -13,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { User, Users, Package } from "lucide-react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +43,14 @@ export default function RootLayout({
       label: "Produtos",
       href: "/produtos",
       icon: (
-        <IconUsers className="text-neutral-700 dark:text-neutral-200 h-5 w-5 shrink-0" />
+        <Package className="text-neutral-700 dark:text-neutral-200 h-5 w-5 shrink-0" />
+      ),
+    },
+    {
+      label: "Usuarios",
+      href: "/usuarios",
+      icon: (
+        <Users className="text-neutral-700 dark:text-neutral-200 h-5 w-5 shrink-0" />
       ),
     },
     {
@@ -58,6 +65,13 @@ export default function RootLayout({
       href: "/comandas",
       icon: (
         <IconChartBar className="text-neutral-700 dark:text-neutral-200 h-5 w-5 shrink-0" />
+      ),
+    },
+    {
+      label: "Clientes",
+      href: "/clientes",
+      icon: (
+        <Users className="text-neutral-700 dark:text-neutral-200 h-5 w-5 shrink-0" />
       ),
     },
     {
@@ -127,13 +141,7 @@ const Logo = () => {
       href="/"
       className="font-bold text-xl text-orange-500 flex items-center space-x-2 py-1"
     >
-      <Image
-        src="/assets/logole-primaria-bg.png"
-        alt="LinkEats Logo"
-        width={50}
-        height={50}
-        className="shrink-0 rounded-lg"
-      />
+      <div className="h-7 w-7 bg-orange-500 rounded-md shrink-0" />
       <span className="whitespace-pre">LinkEats</span>
     </a>
   );
@@ -145,13 +153,7 @@ const LogoIcon = () => {
       href="/"
       className="font-bold text-xl text-orange-500 flex items-center space-x-2 py-1"
     >
-      <Image
-        src="/assets/logole-primaria-bg.png"
-        alt="LinkEats Logo"
-        width={50}
-        height={50}
-        className="shrink-0 rounded-lg"
-      />
+      <div className="h-7 w-7 bg-orange-500 rounded-md shrink-0" />
     </a>
   );
 };
