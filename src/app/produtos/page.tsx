@@ -1,94 +1,122 @@
 "use client";
 
-import { useState } from "react";
-import { Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import productsService, { Product } from "@/services/products.service";
+import { CreateProductDialog } from "@/components/CreateProductDialog";
+import { EditProductDialog } from "@/components/EditProductDialog";
 
 export default function ProdutosPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
-  const categories = [
-    "Todos",
-    "Sanduíches",
-    "Acompanhamentos",
-    "Bebidas",
-    "Pizzas",
-  ];
+  useEffect(() => {
+    loadProducts();
+    loadCategories();
+  }, []);
 
-  const products = [
-    {
-      id: "P001",
-      image: "🍔",
-      name: "Hambúrguer Clássico",
-      category: "Sanduíches",
-      price: "R$ 25.99",
-      stock: 150,
-    },
-    {
-      id: "P002",
-      image: "🍟",
-      name: "Batata Frita Grande",
-      category: "Acompanhamentos",
-      price: "R$ 12.50",
-      stock: 200,
-    },
-    {
-      id: "P003",
-      image: "🧃",
-      name: "Suco de Laranja Natural",
-      category: "Bebidas",
-      price: "R$ 8.00",
-      stock: 80,
-    },
-    {
-      id: "P004",
-      image: "🥤",
-      name: "Milkshake de Chocolate",
-      category: "Bebidas",
-      price: "R$ 18.00",
-      stock: 40,
-    },
-    {
-      id: "P005",
-      image: "🍕",
-      name: "Pizza Calabresa Média",
-      category: "Pizzas",
-      price: "R$ 45.00",
-      stock: 10,
-    },
-    {
-      id: "P006",
-      image: "🧅",
-      name: "Anéis de Cebola",
-      category: "Acompanhamentos",
-      price: "R$ 10.00",
-      stock: 75,
-    },
-    {
-      id: "P007",
-      image: "☕",
-      name: "Café Expresso",
-      category: "Bebidas",
-      price: "R$ 6.50",
-      stock: 120,
-    },
-  ];
+  useEffect(() => {
+    loadProducts();
+  }, [selectedCategory]);
 
-  const filteredProducts =
-    selectedCategory === "Todos"
-      ? products
-      : products.filter((p) => p.category === selectedCategory);
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await productsService.getAll(
+        undefined,
+        selectedCategory !== "Todos" ? selectedCategory : undefined
+      );
+      setProducts(data);
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const data = await productsService.getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error("Erro ao carregar categorias:", error);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+    
+    try {
+      await productsService.delete(id);
+      await loadProducts();
+      await loadCategories();
+    } catch (error) {
+      console.error("Erro ao deletar produto:", error);
+      alert("Erro ao deletar produto");
+    }
+  };
+
+  const handleEdit = (id: number) => {
+    setSelectedProductId(id);
+    setEditDialogOpen(true);
+  };
+
+  const handleSuccess = () => {
+    loadProducts();
+    loadCategories();
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
 
   return (
     <div className="min-h-screen p-8 space-y-8">
+      {/* Dialogs */}
+      <CreateProductDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={handleSuccess}
+        categories={categories}
+      />
+      
+      <EditProductDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSuccess={handleSuccess}
+        productId={selectedProductId}
+        categories={categories}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">
           Controle de Produtos e Estoque
         </h1>
-        <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium transition-colors">
+        <Button
+          onClick={() => setCreateDialogOpen(true)}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-medium transition-colors"
+        >
           <Plus className="h-5 w-5" />
           Adicionar Produto
-        </button>
+        </Button>
       </div>
 
       {/* Filter */}
@@ -96,21 +124,23 @@ export default function ProdutosPage() {
         <label className="text-sm text-neutral-600 dark:text-neutral-400">
           Filtrar por Categoria:
         </label>
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-        >
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Selecione uma categoria" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Todos">Todos</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Products Table */}
-      <div className="bg-neutral-100 dark:bg-neutral-800 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700">
+      <Card className="overflow-hidden">
         <div className="p-6">
           <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-6">
             Lista de Produtos
@@ -123,9 +153,6 @@ export default function ProdutosPage() {
                     ID
                   </th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-neutral-900 dark:text-white uppercase tracking-wider">
-                    Imagem
-                  </th>
-                  <th className="text-left py-4 px-4 text-sm font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                     Nome do Produto
                   </th>
                   <th className="text-left py-4 px-4 text-sm font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
@@ -134,44 +161,80 @@ export default function ProdutosPage() {
                   <th className="text-left py-4 px-4 text-sm font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                     Preço
                   </th>
-                  <th className="text-left py-4 px-4 text-sm font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
-                    Esto
+                  <th className="text-right py-4 px-4 text-sm font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
+                    Ações
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredProducts.map((product) => (
-                  <tr
-                    key={product.id}
-                    className="border-b border-neutral-200 dark:border-neutral-700/50 last:border-0 hover:bg-neutral-200 dark:hover:bg-neutral-700/30 transition-colors"
-                  >
-                    <td className="py-4 px-4 text-sm text-neutral-900 dark:text-white font-medium">
-                      {product.id}
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="w-12 h-12 bg-neutral-300 dark:bg-neutral-700 rounded-lg flex items-center justify-center text-2xl">
-                        {product.image}
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-sm text-neutral-900 dark:text-white font-medium">
-                      {product.name}
-                    </td>
-                    <td className="py-4 px-4 text-sm text-neutral-600 dark:text-neutral-300">
-                      {product.category}
-                    </td>
-                    <td className="py-4 px-4 text-sm text-neutral-900 dark:text-white font-medium">
-                      {product.price}
-                    </td>
-                    <td className="py-4 px-4 text-sm text-neutral-900 dark:text-white">
-                      {product.stock}
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-neutral-600 dark:text-neutral-400">
+                      Carregando...
                     </td>
                   </tr>
-                ))}
+                ) : products.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-neutral-600 dark:text-neutral-400">
+                      Nenhum produto encontrado
+                    </td>
+                  </tr>
+                ) : (
+                  products.map((product) => (
+                    <tr
+                      key={product.id}
+                      className="border-b border-neutral-200 dark:border-neutral-700/50 last:border-0 hover:bg-neutral-200 dark:hover:bg-neutral-700/30 transition-colors"
+                    >
+                      <td className="py-4 px-4 text-sm text-neutral-900 dark:text-white font-medium">
+                        #{product.id}
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm text-neutral-900 dark:text-white font-medium">
+                            {product.name}
+                          </span>
+                          {product.notes && (
+                            <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                              {product.notes}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-sm text-neutral-600 dark:text-neutral-300">
+                        {product.category}
+                      </td>
+                      <td className="py-4 px-4 text-sm text-neutral-900 dark:text-white font-medium">
+                        {formatCurrency(product.price)}
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(product.id)}
+                          >
+                            <Pencil className="h-3 w-3 mr-1" />
+                            Editar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-destructive text-destructive hover:bg-destructive hover:text-white"
+                            onClick={() => handleDelete(product.id)}
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Excluir
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

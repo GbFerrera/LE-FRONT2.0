@@ -30,6 +30,7 @@ import { MoreHorizontal, Plus, UserPlus, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import professionalsService, { Professional } from "@/services/professionals.service";
 import { CreateProfessionalDialog } from "@/components/CreateProfessionalDialog";
+import { EditProfessionalDialog } from "@/components/EditProfessionalDialog";
 
 
 export default function Usuarios() {
@@ -38,6 +39,8 @@ export default function Usuarios() {
   const [cargoFilter, setCargoFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<number | null>(null);
 
   // Carregar profissionais do backend
   useEffect(() => {
@@ -67,6 +70,12 @@ export default function Usuarios() {
       console.error("Erro ao deletar profissional:", error);
       alert("Erro ao deletar profissional");
     }
+  };
+
+  // Editar profissional
+  const handleEdit = (id: number) => {
+    setSelectedProfessionalId(id);
+    setEditDialogOpen(true);
   };
 
   // Filtrar profissionais
@@ -150,6 +159,14 @@ export default function Usuarios() {
         onSuccess={loadProfessionals}
       />
 
+      {/* Dialog de Editar Profissional */}
+      <EditProfessionalDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSuccess={loadProfessionals}
+        professionalId={selectedProfessionalId}
+      />
+
       {/* Card with Table */}
       <Card className="overflow-hidden">
         <div className="overflow-auto">
@@ -209,7 +226,7 @@ export default function Usuarios() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(professional.id)}>
                             <Pencil className="h-4 w-4 mr-2" />
                             Editar
                           </DropdownMenuItem>
